@@ -1,0 +1,88 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>프로세카 실시간 랭킹</title>
+<style>
+body {
+    background-color: #111;
+    color: #fff;
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+h1 {
+    color: #4CAF50;
+}
+table {
+    width: 90%;
+    margin: auto;
+    border-collapse: collapse;
+    background-color: #1e1e1e;
+}
+th, td {
+    padding: 8px;
+    border: 1px solid #333;
+}
+th {
+    background-color: #333;
+}
+</style>
+</head>
+<body>
+<h1>프로세카 실시간 랭킹</h1>
+<p>남은 시간 계산 중...</p>
+<p>마지막 업데이트: <span id="lastUpdate">-</span></p>
+<table>
+    <thead>
+        <tr>
+            <th>순위</th>
+            <th>닉네임</th>
+            <th>카드</th>
+            <th>점수</th>
+            <th>평균 속도(/h)</th>
+            <th>예측 점수</th>
+        </tr>
+    </thead>
+    <tbody id="rankingTable"></tbody>
+</table>
+
+<script>
+const EVENT_ID = 176;
+const TARGETS = "1,5,50,100,150,200,250,300,500";
+const API_URL = `https://api.sekai.best/event/${EVENT_ID}/rankings?region=jp&targets=${TARGETS}`;
+
+async function fetchRanking() {
+    try {
+        const response = await fetch(API_URL);
+        const data = await response.json();
+        
+        const tableBody = document.getElementById("rankingTable");
+        tableBody.innerHTML = "";
+        
+        data.data.forEach(player => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${player.rank}</td>
+                <td>${player.name}</td>
+                <td>${player.userCard ? player.userCard.cardId : "-"}</td>
+                <td>${player.score.toLocaleString()}</td>
+                <td>${player.avgScorePerHour ? player.avgScorePerHour.toLocaleString() : "-"}</td>
+                <td>${player.scorePrediction ? player.scorePrediction.toLocaleString() : "N/A"}</td>
+            `;
+            tableBody.appendChild(row);
+        });
+        
+        document.getElementById("lastUpdate").textContent = new Date().toLocaleTimeString();
+    } catch (err) {
+        console.error("데이터 불러오기 실패", err);
+    }
+}
+
+// 최초 실행
+fetchRanking();
+// 5분마다 자동 갱신
+setInterval(fetchRanking, 5 * 60 * 1000);
+</script>
+</body>
+</html>
